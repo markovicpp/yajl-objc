@@ -48,7 +48,10 @@ typedef NS_ENUM(NSUInteger, YAJLParserOptions) {
   YAJLParserOptionsNone = 0, //!< No options
   YAJLParserOptionsAllowComments = 1 << 0, //!< Javascript style comments will be allowed in the input (both /&asterisk; &asterisk;/ and //)
   YAJLParserOptionsCheckUTF8 = 1 << 1, //!< Invalid UTF8 strings will cause a parse error
-  YAJLParserOptionsStrictPrecision = 1 << 2, //!< If YES will force strict precision and return integer overflow error
+  YAJLParserOptionsAllowTrailingGarbage = 1 << 2, //!< If YES will turn off check that the entire input text was consumed
+  YAJLParserOptionsAllowMultipleValues = 1 << 3, //!< If YES will allow multiple values to be parsed for same key
+  YAJLParserOptionsAllowPartialValues = 1 << 4, //!< If YES will suppresses the check that the top level value was completely consumed
+  YAJLParserOptionsStrictPrecision = 1 << 5 //!< If YES will force strict precision and return integer overflow error
 };
 
 //! Parser status

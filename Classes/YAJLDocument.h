@@ -46,6 +46,14 @@ extern NSInteger YAJLDocumentStackCapacity;
 @protocol YAJLDocumentDelegate <NSObject>
 @optional
 /*!
+ Did parse root element. Called when the root element is finished parsing.
+ @param document Sender
+ @param dict Root dictionary or array
+ @param type Type of element
+*/
+- (void)document:(YAJLDocument *)document didParse:(id)rootElement withType:(YAJLDecoderCurrentType)type;
+
+/*!
  Did add dictionary.
  @param document Sender
  @param dict Dictionary that was added
@@ -193,4 +201,8 @@ extern NSInteger YAJLDocumentStackCapacity;
  */
 - (YAJLParserStatus)parse:(NSData *)data error:(NSError **)error;
 
+/*!
+ Clean parsed data.
+ */
+- (void)clean;
 @end

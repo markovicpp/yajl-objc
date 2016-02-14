@@ -77,22 +77,27 @@ NSInteger YAJLDocumentStackCapacity = 20;
 	return parserStatus_;
 }
 
+- (void)clean {
+	root_ = nil;
+	currentType_ = YAJLDecoderCurrentTypeNone;
+}
+
 #pragma mark Delegates
 
 - (void)parser:(YAJLParser *)parser didAdd:(id)value {
 	switch (currentType_) {
 		case YAJLDecoderCurrentTypeArray:
-		[array_ addObject:value];
-		if ([delegate_ respondsToSelector:@selector(document:didAddObject:toArray:)])
-		[delegate_ document:self didAddObject:value toArray:array_];
-		break;
+			[array_ addObject:value];
+			if ([delegate_ respondsToSelector:@selector(document:didAddObject:toArray:)])
+				[delegate_ document:self didAddObject:value toArray:array_];
+			break;
 		case YAJLDecoderCurrentTypeDict:
-		NSParameterAssert(key_);
-		if (value) dict_[key_] = value;
-		if ([delegate_ respondsToSelector:@selector(document:didSetObject:forKey:inDictionary:)])
-		[delegate_ document:self didSetObject:value forKey:key_ inDictionary:dict_];
-		[self _popKey];
-		break;
+			NSParameterAssert(key_);
+			if (value) dict_[key_] = value;
+			if ([delegate_ respondsToSelector:@selector(document:didSetObject:forKey:inDictionary:)])
+				[delegate_ document:self didSetObject:value forKey:key_ inDictionary:dict_];
+			[self _popKey];
+			break;
 		default:
 		break;
 	}
@@ -107,7 +112,7 @@ NSInteger YAJLDocumentStackCapacity = 20;
 	key_ = nil;
 	[keyStack_ removeLastObject]; // Pop
 	if (keyStack_.count > 0)
-	key_ = keyStack_[keyStack_.count-1];
+		key_ = keyStack_[keyStack_.count-1];
 }
 
 - (void)parserDidStartDictionary:(YAJLParser *)parser {
@@ -124,7 +129,20 @@ NSInteger YAJLDocumentStackCapacity = 20;
 	[self _pop];
 	[self parser:parser didAdd:value];
 	if ([delegate_ respondsToSelector:@selector(document:didAddDictionary:)])
-	[delegate_ document:self didAddDictionary:dict];
+		[delegate_ document:self didAddDictionary:dict];
+	
+	// if the root document has been finished notify delegate
+	if (stack_.count == 0) {
+		
+		NSAssert( root_ == dict, @"Finished root element does not match the original one.");
+		
+		if ([delegate_ respondsToSelector:@selector(document:didParse:withType:)]) {
+			[delegate_ document:self didParse:dict withType:YAJLDecoderCurrentTypeDict];
+		}
+		
+		// reset to process next root element
+		[self clean];
+	}
 }
 
 - (void)parserDidStartArray:(YAJLParser *)parser {
@@ -141,7 +159,20 @@ NSInteger YAJLDocumentStackCapacity = 20;
 	[self _pop];
 	[self parser:parser didAdd:value];
 	if ([delegate_ respondsToSelector:@selector(document:didAddArray:)])
-	[delegate_ document:self didAddArray:array];
+		[delegate_ document:self didAddArray:array];
+	
+	// if the root document has been finished notify delegate
+	if (stack_.count == 0) {
+		
+		NSAssert( root_ == array, @"Finished root element does not match the original one.");
+		
+		if ([delegate_ respondsToSelector:@selector(document:didParse:withType:)]) {
+			[delegate_ document:self didParse:array withType:YAJLDecoderCurrentTypeArray];
+		}
+		
+		// reset to process next root element
+		[self clean];
+	}
 }
 
 - (void)_pop {
